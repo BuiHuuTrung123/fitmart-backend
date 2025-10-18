@@ -1,32 +1,57 @@
-/**
- * Updated by trungquandev.com's author on August 17 2023
- * YouTube: https://youtube.com/@trungquandev
- * "A bit of fragrance clings to the hand that gives flowers!"
- */
-
 import express from 'express'
-import { mapOrder } from '~/utils/sorts.js'
+import cors from 'cors'
+import { CONNECT_DB, CLOSE_DB } from '~/config/mongodb'
+import { env } from '~/config/environment'
+import { APIs_v1 } from '~/routes/v1'
+import { errorHandlingMiddleware } from '~/middlewares/errorHandlingMiddleware'
+import { corsOptions } from '~/config/cors'
+import cookieParser from 'cookie-parser'
+// import exitHook from 'async-exit-hook'
+import a from 'async-exit-hook'
+const exitHook = a
+const START_SERVER = () => {
 
-const app = express()
+  const app = express()
 
-const hostname = 'localhost'
-const port = 8017
+  // Lấy cache từ disk qua ExpressJS
+  // https://stackoverflow.com/a/53244017/8324172
+  app.use((req, res, next) => {
+    res.set('Cache-Control', 'no-store');
+    next();
+  });
 
-app.get('/', (req, res) => {
-  // Test Absolute import mapOrder
-  console.log(mapOrder(
-    [ { id: 'id-1', name: 'One' },
-      { id: 'id-2', name: 'Two' },
-      { id: 'id-3', name: 'Three' },
-      { id: 'id-4', name: 'Four' },
-      { id: 'id-5', name: 'Five' } ],
-    ['id-5', 'id-4', 'id-2', 'id-3', 'id-1'],
-    'id'
-  ))
-  res.end('<h1>Hello World!</h1><hr>')
-})
+  //cau hinh cookieParser
+  app.use(cookieParser())
+  //
+  app.use(cors(corsOptions))
+  //Enable req.body json data
+  app.use(express.json())
+  //Use APIs v1
+  app.use('/v1', APIs_v1)
+  //Middlewares xu ly loi tap trung
+  app.use(errorHandlingMiddleware)
 
-app.listen(port, hostname, () => {
-  // eslint-disable-next-line no-console
-  console.log(`Hello Trung Quan Dev, I am running at ${ hostname }:${ port }/`)
-})
+  if (env.BUILD_MODE === 'production') {
+    app.listen(process.env.PORT, () => {
+      console.log(`Hello Trung Bui DEV, I am Production running at http://${env.APP_HOST}:${env.APP_PORT}/`)
+    })
+  }
+  else {
+    app.listen(env.LOCAL_DEV_APP_PORT, env.LOCAL_DEV_APP_HOST, () => {
+      console.log(`Hello Trung Bui Dev, I am Dev running at http://${env.LOCAL_DEV_APP_HOST}:${env.LOCAL_DEV_APP_PORT}/`)
+    })
+  }
+
+
+  exitHook(() => {
+    CLOSE_DB()
+  })
+}
+
+CONNECT_DB()
+  .then(() => console.log('Kết nối thành công'))
+  .then(() => START_SERVER())
+  .catch(error => {
+    console.error(error)
+    process.exit(0)
+  })
