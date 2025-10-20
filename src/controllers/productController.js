@@ -4,7 +4,9 @@ import { productModel } from '~/models/productModel'
 const createNew = async (req, res, next) => {
     try {
         //Điều hướng dữ liệu sang tầng service
-        const createProduct = await productService.createNew(req.body)
+        const productImageFile = req.file
+
+        const createProduct = await productService.createNew(req.body, productImageFile)
         // Có kết quả trả về Client
         res.status(StatusCodes.CREATED).json(createProduct)
 
@@ -16,7 +18,6 @@ const getAllData = async (req, res, next) => {
     try {
         //Điều hướng dữ liệu sang tầng service
         const allData = await productModel.getAllData(req.body)
-        console.log(allData)
         // Có kết quả trả về Client
         res.status(StatusCodes.OK).json(allData)
 
@@ -24,7 +25,32 @@ const getAllData = async (req, res, next) => {
         next(error)
     }
 }
+
+const deleteProduct = async (req, res, next) => {
+    try {
+        const productId = req.params.id
+        const move = await productModel.deleteProduct(productId)
+        res.status(StatusCodes.OK).json(move)
+    } catch (error) {
+        next(error)
+    }
+}
+
+const update = async (req, res, next) => {
+    try {
+        const productId = req.params.id
+        const productImageFile = req.file
+        
+        const updatedProduct = await productService.update(productId, req.body, productImageFile)
+        
+        res.status(StatusCodes.OK).json(updatedProduct)
+    } catch (error) {
+        next(error)
+    }
+}
 export const productController = {
     createNew,
-    getAllData
+    getAllData,
+    deleteProduct,
+    update
 }

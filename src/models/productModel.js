@@ -17,10 +17,10 @@ const MAIN_CATEGORIES = {
     ACCESSORIES: 'Phụ kiện tập gym'
 }
 
+// ✅ CẬP NHẬT: Bỏ DISCONTINUED
 const PRODUCT_STATUS = {
     IN_STOCK: 'in_stock',
     OUT_OF_STOCK: 'out_of_stock',
-    DISCONTINUED: 'discontinued',
     LOW_STOCK: 'low_stock'
 }
 
@@ -83,9 +83,10 @@ const PRICE_LIMITS = {
 const PRODUCT_COLLECTION_SCHEMA = Joi.object({
     // Basic Information
     name: Joi.string().required().min(3).max(100).trim().strict(),
-    slug: Joi.string().required().min(3).trim().strict(),
+   
     description: Joi.string().required().min(10).max(1000).trim().strict(),
-    shortDescription: Joi.string().max(200).trim().strict().default(''),
+    // ✅ THÊM: Trường quantification
+    quantification: Joi.string().required().min(1).max(100).trim().strict(),
 
     // Category System
     mainCategory: Joi.string().valid(...Object.values(MAIN_CATEGORIES)).required(),
@@ -114,17 +115,12 @@ const PRODUCT_COLLECTION_SCHEMA = Joi.object({
     // Inventory & Stock
     stock: Joi.object({
         quantity: Joi.number().min(0).required(),
+        // ✅ CẬP NHẬT: Chỉ còn 3 status
         status: Joi.string().valid(...Object.values(PRODUCT_STATUS)).default(PRODUCT_STATUS.IN_STOCK)
     }).required(),
 
     // Media
-    images: Joi.array().items(
-        Joi.object({
-            url: Joi.string().uri().required(),
-            alt: Joi.string().max(100).default(''),
-            isPrimary: Joi.boolean().default(false)
-        })
-    ).min(1).required(),
+    images: Joi.string().default(null),
 
     // Timestamps
     createdAt: Joi.date().timestamp('javascript').default(Date.now),
@@ -139,6 +135,7 @@ const INVALID_UPDATE_FIELDS = ['_id', 'createdAt', 'slug']
 const validateBeforeCreate = async (data) => {
     return await PRODUCT_COLLECTION_SCHEMA.validateAsync(data, { abortEarly: false })
 }
+
 const createNew = async (data) => {
     try {
         const validData = await validateBeforeCreate(data)
@@ -148,38 +145,69 @@ const createNew = async (data) => {
 
         const createProduct = await GET_DB().collection(PRODUCT_COLLECTION_NAME).insertOne(newProductToAdd)
 
-       
+
         return createProduct
     } catch (error) {
         throw new Error(error)
     }
 }
+
 const findOneById = async (id) => {
     try {
-
         const result = await GET_DB().collection(PRODUCT_COLLECTION_NAME).findOne({
             _id: new ObjectId(id)
         })
         return result
     } catch (error) {
-
+        throw new Error(error)
     }
 }
+
 const getAllData = async () => {
     try {
-
         const result = await GET_DB().collection(PRODUCT_COLLECTION_NAME).find({}).toArray()
-    
         return result
-
-        
     } catch (error) {
+        throw new Error(error)
+    }
+}
 
+const deleteProduct = async (productId) => {
+    try {
+        const deleteResult = await GET_DB().collection(PRODUCT_COLLECTION_NAME).findOneAndDelete({ _id: new ObjectId(productId) });
+        console.log(deleteResult)
+        return deleteResult
+    } catch (error) {
+        throw new Error(error)
+    }
+}
+const update = async (id, data) => {
+    try {
+        const condition = { _id: new ObjectId(id) }
+        
+        // Chỉ update những field có giá trị
+        const updateData = { ...data }
+        delete updateData._id // Không cho update _id
+        
+        const result = await GET_DB().collection(PRODUCT_COLLECTION_NAME).findOneAndUpdate(
+            condition,
+            { $set: updateData },
+            { returnDocument: 'after' }
+        )
+        
+        if (!result) {
+            throw new ApiError(StatusCodes.NOT_FOUND, 'Product not found')
+        }
+        
+        return result
+    } catch (error) {
+        throw error
     }
 }
 export const productModel = {
     createNew,
     findOneById,
-    getAllData
-
+    getAllData,
+    deleteProduct, 
+    update
 }
