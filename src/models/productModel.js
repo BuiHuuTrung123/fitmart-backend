@@ -157,6 +157,8 @@ const findOneById = async (id) => {
         const result = await GET_DB().collection(PRODUCT_COLLECTION_NAME).findOne({
             _id: new ObjectId(id)
         })
+
+       
         return result
     } catch (error) {
         throw new Error(error)
@@ -175,7 +177,7 @@ const getAllData = async () => {
 const deleteProduct = async (productId) => {
     try {
         const deleteResult = await GET_DB().collection(PRODUCT_COLLECTION_NAME).findOneAndDelete({ _id: new ObjectId(productId) });
-        console.log(deleteResult)
+
         return deleteResult
     } catch (error) {
         throw new Error(error)

@@ -20,7 +20,7 @@ const getAllData = async (req, res, next) => {
         const allData = await productModel.getAllData(req.body)
         // Có kết quả trả về Client
         res.status(StatusCodes.OK).json(allData)
-
+     
     } catch (error) {
         next(error)
     }
