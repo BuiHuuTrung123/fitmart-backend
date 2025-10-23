@@ -206,10 +206,22 @@ const update = async (id, data) => {
         throw error
     }
 }
+const getProductDetail = async (productId) => {
+    try {
+        const result = await GET_DB().collection(PRODUCT_COLLECTION_NAME).findOne({
+            _id: new ObjectId(productId)
+        })
+        return result
+    } catch (error) {
+        throw new Error(error)
+    }
+}
+
 export const productModel = {
     createNew,
     findOneById,
     getAllData,
     deleteProduct, 
-    update
+    update,
+    getProductDetail
 }

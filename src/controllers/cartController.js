@@ -17,13 +17,13 @@ const createNew = async (req, res, next) => {
 }
 const addItemToCart = async (req, res, next) => {
     try {
-       
+
         const { productId } = req.body
-         const userId = req.jwtDecoded._id 
-     
-         // Lấy userId từ auth middleware
+        const userId = req.jwtDecoded._id
+
+        // Lấy userId từ auth middleware
         const updatedCart = await cartService.addItemToCart(userId, productId)
-          console.log('updatedCart',updatedCart)
+
         res.status(StatusCodes.OK).json(updatedCart)
 
     } catch (error) {
@@ -33,18 +33,35 @@ const addItemToCart = async (req, res, next) => {
 
 const getCartDetail = async (req, res, next) => {
     try {
-         const userId = req.params.id
+        const userId = req.params.id
         //Điều hướng dữ liệu sang tầng service
         const detailCart = await cartModel.getCartDetail(userId)
         // Có kết quả trả về Client
         res.status(StatusCodes.OK).json(detailCart)
-     
+
     } catch (error) {
         next(error)
     }
 }
+
+const deleteProductInCart = async (req, res, next) => {
+    try {
+
+        const productId = req.params.id
+ 
+        const { cartActiveId } = req.body
+
+
+        const move = await cartModel.deleteProductInCart(productId, cartActiveId)
+        res.status(StatusCodes.OK).json(move)
+    } catch (error) {
+        next(error)
+    }
+}
+
 export const cartController = {
     createNew,
     addItemToCart,
-    getCartDetail
+    getCartDetail,
+    deleteProductInCart
 }

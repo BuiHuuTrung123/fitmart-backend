@@ -21,7 +21,7 @@ import ApiError from '~/utils/ApiError'
         //B3: cho phép req đi tiếp
         next()
     } catch (err) {
-        // console.log(authMiddleware: ', error)
+    
         // Nếu lỗi là accessToken không còn hiệu lực (expired) thì mình có thể trả về lỗi với mã lỗi GONE - 410 cho phía FE
         // biết để gọi api refreshToken
         if (err?.message?.includes('jwt expired')) {
