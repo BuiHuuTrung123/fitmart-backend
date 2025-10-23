@@ -20,7 +20,7 @@ const getAllData = async (req, res, next) => {
         const allData = await productModel.getAllData(req.body)
         // Có kết quả trả về Client
         res.status(StatusCodes.OK).json(allData)
-     
+
     } catch (error) {
         next(error)
     }
@@ -40,17 +40,33 @@ const update = async (req, res, next) => {
     try {
         const productId = req.params.id
         const productImageFile = req.file
-        
+
         const updatedProduct = await productService.update(productId, req.body, productImageFile)
-        
+
         res.status(StatusCodes.OK).json(updatedProduct)
     } catch (error) {
         next(error)
     }
 }
+
+const getProductDetail = async (req, res, next) => {
+    try {
+        //Điều hướng dữ liệu sang tầng service
+        const productId = req.params.id
+        const productDetail = await productModel.getProductDetail(productId)
+        console.log('productDetail',productDetail)
+        // Có kết quả trả về Client
+        res.status(StatusCodes.OK).json(productDetail)
+
+    } catch (error) {
+        next(error)
+    }
+}
+
 export const productController = {
     createNew,
     getAllData,
     deleteProduct,
-    update
+    update,
+    getProductDetail
 }
